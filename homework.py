@@ -35,7 +35,8 @@ def send_message(bot, message) -> None:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.info('The message has been sent')
     except Exception as error:
-        logging.error('The message has not been sent')
+        logging.error(f'The message has not been sent. \nERROR:{error}')
+
 
 def get_api_answer(current_timestamp) -> dict:
     """Получение списка домашки через API."""
@@ -62,6 +63,7 @@ def get_api_answer(current_timestamp) -> dict:
 
 
 def check_response(response):
+    """Получение ответа от сервера Практикум"""
     try:
         homeworks = response["homeworks"]
     except Exception as error:
