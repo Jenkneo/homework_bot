@@ -63,7 +63,7 @@ def get_api_answer(current_timestamp) -> dict:
 
 
 def check_response(response):
-    """Получение ответа от сервера Практикум"""
+    """Получение ответа от сервера Практикум."""
     try:
         homeworks = response["homeworks"]
     except Exception as error:
@@ -92,7 +92,7 @@ def parse_status(homework) -> str:
 
 
 def check_tokens() -> bool:
-    """Провекра существования токенов"""
+    """Провекра существования токенов."""
     if TELEGRAM_TOKEN is None or PRACTICUM_TOKEN is None:
         logging.critical('Necessary tokens have not been received')
         return False
