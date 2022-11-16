@@ -79,11 +79,11 @@ def check_response(response):
 
 def parse_status(homework) -> str:
     """Подготовка отправки ответа в ТГ."""
-    homework_name = homework["homework_name"]
-    homework_status = homework["status"]
+    homework_name = homework.get("homework_name")
+    homework_status = homework.get("status")
 
     if not homework_status or not homework_name:
-        raise exceptions.PracticumDataException(
+        raise KeyError(
             'Practicum API return incorrect data'
         )
 
