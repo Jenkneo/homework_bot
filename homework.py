@@ -3,6 +3,7 @@ import requests
 import time
 import telegram
 import os
+import exceptions
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,11 +32,8 @@ logging.basicConfig(
 
 def send_message(bot, message) -> None:
     """Отправка сообщения в телеграм."""
-    try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-        logging.info('The message has been sent')
-    except Exception as error:
-        logging.error(f'The message has not been sent. \nERROR:{error}')
+    bot.send_message(TELEGRAM_CHAT_ID, message)
+    logging.info('The message has been sent')
 
 
 def get_api_answer(current_timestamp) -> dict:
@@ -50,14 +48,14 @@ def get_api_answer(current_timestamp) -> dict:
             f'Practicum. Response received, status code {response.status_code}'
         )
     except Exception as error:
-        logging.error(
-            f'Practicum server server is not respond \n{error}'
+        raise exceptions.PracticumResponseException(
+            f'Practicum server server is not respond. ERROR:{error}'
         )
-        raise TypeError
 
     if response.status_code != 200:
-        logging.error('Practicum response code is not 200')
-        raise TypeError
+        raise exceptions.PracticumResponseException(
+            'Practicum response code is not 200'
+        )
 
     return response.json()
 
@@ -67,21 +65,27 @@ def check_response(response):
     try:
         homeworks = response["homeworks"]
     except Exception as error:
-        logging.error(f'Practicum API returned incorrect data \n{error}')
-        raise TypeError
+        raise exceptions.PracticumDataException(
+            f'Practicum API returned incorrect data \n{error}'
+        )
 
     if type(homeworks) is not list:
-        logging.error('Practicum API returned not a list')
-        raise TypeError
+        raise exceptions.PracticumDataException(
+            'Practicum API returned not a list'
+        )
 
     return homeworks
 
 
 def parse_status(homework) -> str:
     """Подготовка отправки ответа в ТГ."""
-    # Получает одну домашку, извлекает инфу, и возвращает ответ
     homework_name = homework["homework_name"]
     homework_status = homework["status"]
+
+    if not homework_status or not homework_name:
+        raise exceptions.PracticumDataException(
+            'Practicum API return incorrect data'
+        )
 
     logging.debug(
         f'Homework {homework_name} status has changed to {homework_status}'
@@ -109,7 +113,9 @@ def main():
         time.sleep(RETRY_TIME)
 
     if not check_tokens():
-        raise ImportError
+        raise exceptions.TokenExpection(
+            "The necessary tokens have not been received"
+        )
     current_timestamp = int(time.time())
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     send_message(bot, "Бот запущен")
@@ -132,8 +138,7 @@ def main():
             logging.error(f'{error}')
             message = f'Сбой в работе программы: {error}'
             send_message(bot, message)
-            sleep()
-        else:
+        finally:
             sleep()
 
 
